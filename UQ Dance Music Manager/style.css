@@ -1,0 +1,169 @@
+/* CSS HEX 
+--black-chocolate: #131200ff;
+--mantis: #78bc61ff;
+--dark-khaki: #c0c781ff;
+--camel: #c59b76ff;
+--salmon: #e9806eff;
+*/
+
+:root {
+    /* "custom properties" (variables) declaration */
+    --spotifyDarkGreen: #1db954;
+    --spotifyLightGreen: #1ed760;
+    --spotifyText: #ffffff;
+    --spotifyBackground: #121212;
+    --spotifyMenuBackground: #181818;
+    --spotifyPlaybar: #282828;
+    --spotifyHighlight: #333333;
+    --spotifyTextDark: #8d8d8d;
+}
+
+header{
+    background-color: aqua;
+}
+
+body{
+    background-color: var(--spotifyDarkGreen);
+}
+
+div{
+    font-size: 1.1em;
+    /* background-color: var(--spotifyBackground); */
+    color: var(--spotifyText);
+}
+
+option{
+    color: var(--spotifyText);
+    background-color: var(--spotifyMenuBackground);
+}
+
+select{
+    color: var(--spotifyText) !important;
+    background-color: var(--spotifyBackground) !important;
+    border: none !important;
+}
+
+
+
+
+
+.btn {
+    cursor: default !important;
+}
+
+.container{
+    padding: 20px;
+    background-color: var(--spotifyBackground);
+    height:100vh;
+    display: grid;
+    grid-template-areas:
+    "header header header"
+    "leftSide body rightSide"
+    "footer footer footer";
+    grid-template-columns: 250px 0.75fr auto;
+    grid-template-rows: 0px auto 100px;
+}
+
+.playlistItem{
+    color: var(--spotifyTextDark);
+    cursor: default;
+}
+
+.playlistItem:hover{
+    text-indent: 5px;
+    color: var(--spotifyText);
+    /* background-color: var(--spotifyHighlight); */
+}
+
+.currentlyPlaying{
+    text-indent: 5px;
+    color: var(--spotifyText);
+    /* background-color: var(--spotifyHighlight); */
+}
+
+
+
+
+
+
+
+/* USED FOR DEBUGGING ------------------------------------------ */
+#bodyMiddleColumn * {
+    outline-style:solid !important;
+    outline: yellow;
+}
+
+#bodyHeader{
+    resize: horizontal;
+    grid-area: header;
+}
+
+#bodyLeftColumn{
+    resize: horizontal;
+    grid-area: leftSide;
+
+    /* outline-style: solid;
+    outline-color: darkblue;
+    background-color: red; */
+}
+
+#bodyMiddleColumn{
+    resize: horizontal;
+    grid-area: body;
+
+    outline-style: solid;
+    background-color: purple;
+    outline-color: pink;
+}
+
+#bodyRightColumn{
+    resize: horizontal;
+    grid-area: rightSide;
+
+    /* outline-style: solid;
+    background-color: aqua;
+    outline-color: hotpink; */
+}
+
+#bodyFooter{
+    resize: horizontal;
+    grid-area: footer;
+}
+
+#tokenSection{
+    display: none;
+}
+
+#deviceSection{
+    display: none;
+}
+
+
+
+
+#playlists{
+    list-style: none;
+    padding-left: 0px;
+    font-size: 0.8em;
+}
+#playlists > li{
+    position: relative;
+}
+
+#currentlyPlaying{
+    display: block;
+}
+
+#albumImage{
+    width: 200px;
+    float: left;
+    margin: 20px;
+}
+
+#trackTitle{
+    font-size:1.5em;
+}
+
+#trackArtist{
+    font-size:1em;
+}
