@@ -155,7 +155,7 @@ function addPlaylist(item){
     let node = document.createElement("li");
     node.id = item.id;
     node.className = "playlistItem";
-    node.onclick = refreshPlaylists;
+    node.onclick = playlistSelected;
     node.innerHTML = item.name + " (" + item.tracks.total + ")";
     document.getElementById("playlists").appendChild(node); 
 }
@@ -189,23 +189,23 @@ function playlistSelected() {
 
 // Refresh Functions
 function refreshDevices(){
-    callApi( "GET", DEVICES, null, handleRefreshResponses);
+    callApi( "GET", DEVICES, null, handleDeviceResponse);
 }
 
 function refreshPlaylists(){
-    callApi( "GET", PLAYLISTS + playlistURLAddition, null, handleRefreshResponses);
+    callApi( "GET", PLAYLISTS + playlistURLAddition, null, handlePlaylistResponse);
 }
 
 function fetchTracks(){
     let playlist_id = currentPlaylistSelected;
     if ( playlist_id.length > 0 ){
         url = TRACKS.replace("{{PlaylistId}}", playlist_id);
-        callApi( "GET", url, null, handleRefreshResponses);
+        callApi( "GET", url, null, handleTracksResponse);
     }
 }
 
 function currentlyPlaying(){
-    callApi( "GET", PLAYER + playerURLAddition, null, handleRefreshResponses);
+    callApi( "GET", PLAYER + playerURLAddition, null, handleCurrentlyPlayingResponse);
 }
 
 function callApi(method, url, body, callback){
@@ -267,7 +267,7 @@ function transfer(){
 
 
 // Response Management
-function handleApiResponse(){
+function handleApiResponse() {
     if ( this.status == 200){
         console.log(this.responseText);
         setTimeout(currentlyPlaying, 2000);
@@ -284,80 +284,20 @@ function handleApiResponse(){
     }    
 }
 
-function handleRefreshResponses() {
+function handleDeviceResponse() {
     // Good site response "200 OK"
     if ( this.status == 200 ){
         var data = JSON.parse(this.responseText);
-        // Used this.responseURL to distinguish between calls(Playlist, track, album update)
-        // console.log(this.responseURL);
-        
-        // Refreshing Playlist details
-        if (this.responseURL == PLAYLISTS + playlistURLAddition) {
-            console.log("Playlist handled");
-            removeAllItems( "playlists" );
-            data.items.forEach(item => addPlaylist(item));
-            // document.getElementById('playlists').value=currentPlaylistPlaying;
-            
-        }
-
-        // Refreshing Device details
-        else if (this.responseURL == DEVICES) {
-            console.log("Devices handled");
-            removeAllItems( "devices" );
-            data.devices.forEach(item => addDevice(item));
-        }
-
-        // Refreshing Track details
-        else if (this.responseURL.includes(TRACKS.replace("{{PlaylistId}}", document.getElementById("playlists").value))) {
-            removeAllItems( "tracks" );
-            data.items.forEach((item, index) => addTrack(item, index));
-        }
-        
-        
-        // Refreshing currently playing
-        else if (this.responseURL == PLAYER + playerURLAddition) {
-            // Means an active player exists, else 204 status would have been thrown
-            console.log("Currently Playing handled");
-
-            // Unhides Currently playing div
-            document.getElementById("currentlyPlaying").style.display = "block";
-            
-            
-            if ( data.item != null ){
-                currentAlbum = data.item.album;
-                document.getElementById("albumImage").src = currentAlbum.images[0].url;
-                document.getElementById("trackTitle").innerHTML = data.item.name;
-                document.getElementById("trackArtist").innerHTML = data.item.artists[0].name;
-            }
-            
-            if ( data.device != null ){
-                // select device
-                currentDevice = data.device.id;
-                document.getElementById('devices').value=currentDevice;
-            }
-            
-            // If the track has playlist data
-            if ( data.context != null ){
-                // select playlist
-                currentPlaylistPlaying = data.context.uri;
-                currentPlaylistPlaying = currentPlaylistPlaying.substring( currentPlaylistPlaying.lastIndexOf(":") + 1,  currentPlaylistPlaying.length );
-                // Display the playlist name
-                document.getElementById('playlists').value=currentPlaylistPlaying;
-            }
-
-            // Updates Playlist Highlight
-            console.log(document.getElementById(currentPlaylistPlaying));
-            if (document.getElementById(currentPlaylistPlaying) != null) {
-                document.getElementById(currentPlaylistPlaying).className += " currentlyPlaying";
-            }
-        }
-
-        
+        console.log("Devices handled");
+        removeAllItems( "devices" );
+        data.devices.forEach(item => addDevice(item));        
     }
+
     // Bad or expired token
     else if ( this.status == 401 ){
         refreshAccessToken()
     }
+
     // Playback is not active, or command has been sent
     else if ( this.status == 204 ){
         if (this.responseURL == PLAYER + playerURLAddition) {
@@ -365,6 +305,131 @@ function handleRefreshResponses() {
             console.log("No song currently playing");
         }
     }
+    
+    // Unexpected site response
+    else {
+        console.log(this.responseText);
+        console.log(PLAYER + playerURLAddition);
+        // alert(this.responseText);
+    }
+}
+
+function handlePlaylistResponse() {
+    // Good site response "200 OK"
+    if ( this.status == 200 ){
+        var data = JSON.parse(this.responseText);
+        console.log("Playlist handled");
+        removeAllItems( "playlists" );
+        data.items.forEach(item => addPlaylist(item));
+    // document.getElementById('playlists').value=currentPlaylistPlaying;      
+    }
+
+    // Bad or expired token
+    else if ( this.status == 401 ){
+        refreshAccessToken()
+    }
+
+    // Playback is not active, or command has been sent
+    else if ( this.status == 204 ){
+        if (this.responseURL == PLAYER + playerURLAddition) {
+            // document.getElementById("currentlyPlaying").display = "none";
+            console.log("No song currently playing");
+        }
+    }
+    
+    // Unexpected site response
+    else {
+        console.log(this.responseText);
+        console.log(PLAYER + playerURLAddition);
+        // alert(this.responseText);
+    }
+}
+
+function handleTracksResponse() {
+    // Good site response "200 OK"
+    if ( this.status == 200 ){
+        var data = JSON.parse(this.responseText);
+        removeAllItems( "tracks" );
+        data.items.forEach((item, index) => addTrack(item, index));
+        console.log("Tracks handled");
+    }
+
+    // Bad or expired token
+    else if ( this.status == 401 ){
+        refreshAccessToken()
+    }
+
+    // Playback is not active, or command has been sent
+    else if ( this.status == 204 ){
+        if (this.responseURL == PLAYER + playerURLAddition) {
+            // document.getElementById("currentlyPlaying").display = "none";
+            console.log("No song currently playing");
+        }
+    }
+    
+    // Unexpected site response
+    else {
+        console.log(this.responseText);
+        console.log(PLAYER + playerURLAddition);
+        // alert(this.responseText);
+    }
+}
+
+function handleCurrentlyPlayingResponse() {
+    // Good site response "200 OK"
+    if ( this.status == 200 ){
+        // Means an active player exists, else 204 status would have been thrown
+        var data = JSON.parse(this.responseText);
+        console.log("Currently Playing handled");
+
+        // Unhides Currently playing div
+        document.getElementById("currentlyPlaying").style.display = "block";
+        
+        
+        if ( data.item != null ){
+            currentAlbum = data.item.album;
+            document.getElementById("albumImage").src = currentAlbum.images[0].url;
+            document.getElementById("trackTitle").innerHTML = data.item.name;
+            document.getElementById("trackArtist").innerHTML = data.item.artists[0].name;
+        }
+        
+        if ( data.device != null ){
+            // select device
+            currentDevice = data.device.id;
+            document.getElementById('devices').value=currentDevice;
+        }
+        
+        // If the track has playlist data
+        if ( data.context != null ){
+            // select playlist
+            currentPlaylistPlaying = data.context.uri;
+            currentPlaylistPlaying = data.context.uri.substring(currentPlaylistPlaying.lastIndexOf(":") + 1,  currentPlaylistPlaying.length );
+            console.log(currentPlaylistPlaying);
+            // console.log(data);
+            // Display the playlist name
+            // document.getElementById('playlists').value=currentPlaylistPlaying;
+        }
+
+        // Updates Playlist Highlight
+        console.log(document.getElementById(currentPlaylistPlaying));
+        if (document.getElementById(currentPlaylistPlaying) != null) {
+            document.getElementById(currentPlaylistPlaying).className += " currentlyPlaying";
+        }
+    }
+
+    // Bad or expired token
+    else if ( this.status == 401 ){
+        refreshAccessToken()
+    }
+
+    // Playback is not active, or command has been sent
+    else if ( this.status == 204 ){
+        if (this.responseURL == PLAYER + playerURLAddition) {
+            // document.getElementById("currentlyPlaying").display = "none";
+            console.log("No song currently playing");
+        }
+    }
+    
     // Unexpected site response
     else {
         console.log(this.responseText);
