@@ -349,9 +349,9 @@ function handleTracksResponse() {
     // Good site response "200 OK"
     if ( this.status == 200 ){
         var data = JSON.parse(this.responseText);
+        console.log("Tracks handled");
         removeAllItems( "tracks" );
         data.items.forEach((item, index) => addTrack(item, index));
-        console.log("Tracks handled");
     }
 
     // Bad or expired token
