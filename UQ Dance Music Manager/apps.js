@@ -213,6 +213,11 @@ function fetchTracks(){
         url = TRACKS.replace("{{PlaylistId}}", playlist_id);
         callApi( "GET", url, null, handleTracksResponse);
     }
+    playlist_id = currentPlaylistPlaying;
+    if ( playlist_id.length > 0 ){
+        url = TRACKS.replace("{{PlaylistId}}", playlist_id);
+        callApi( "GET", url, null, handleTracksResponse);
+    }
 }
 
 function currentlyPlaying(){
@@ -333,6 +338,7 @@ function handlePlaylistResponse() {
         removeAllItems( "playlists" );
         data.items.forEach(item => addPlaylist(item));
         updatePlaylistHighlight();
+        fetchTracks();
     // document.getElementById('playlists').value=currentPlaylistPlaying;      
     }
 
@@ -445,6 +451,14 @@ function handleCurrentlyPlayingResponse() {
         console.log(PLAYER + playerURLAddition);
         // alert(this.responseText);
     }
+}
+
+
+
+// Debug Functions
+function verboseData(){
+    console.log("currentPlaylistPlaying: " + currentPlaylistPlaying);
+    console.log("currentPlaylistSelected: " + currentPlaylistSelected);
 }
 
 

@@ -61,7 +61,7 @@ select{
     "leftSide body rightSide"
     "footer footer footer";
     grid-template-columns: 250px 0.75fr auto;
-    grid-template-rows: 0px auto 100px;
+    grid-template-rows: 0px auto 200px;
 }
 
 .playlistItem{
@@ -126,7 +126,6 @@ select{
 }
 
 #bodyFooter{
-    resize: horizontal;
     grid-area: footer;
 }
 
@@ -155,7 +154,7 @@ select{
 }
 
 #albumImage{
-    width: 200px;
+    width: 140px;
     float: left;
     margin: 20px;
 }
