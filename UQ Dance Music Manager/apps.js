@@ -11,6 +11,7 @@ var playlistURLAddition = "?limit=5";
 var playerURLAddition = "?market=US";
 var currentPlaylistPlaying = "";
 var currentPlaylistSelected = "";
+var currentDevicePlaying = [];
 var currentAlbum = "";
 var radioButtons = [];
 
@@ -143,6 +144,7 @@ function handleAuthorizationResponse(){
 
 
 
+
 // Utility Functions
 function addDevice(item){
     let node = document.createElement("option");
@@ -178,12 +180,21 @@ function deviceId(){
     return document.getElementById("devices").value;
 }
 
-function playlistSelected() {
-    currentPlaylistSelected = document.getElementById('playlists').value;
-    console.log(currentPlaylistSelected);
-    console.log(currentPlaylistPlaying);
+function playlistSelected(id) {
+    currentPlaylistSelected = id.target.id;
+    updatePlaylistHighlight()
+    refreshPlaylists();
     fetchTracks();
 }
+
+function updatePlaylistHighlight(){
+    if (document.getElementById(currentPlaylistSelected) != null) {
+        document.getElementById(currentPlaylistSelected).className += " currentlyPlaying";
+    } else if(document.getElementById(currentPlaylistPlaying) != null) {
+        document.getElementById(currentPlaylistPlaying).className += " currentlyPlaying";
+    }
+}
+
 
 
 
@@ -321,6 +332,7 @@ function handlePlaylistResponse() {
         console.log("Playlist handled");
         removeAllItems( "playlists" );
         data.items.forEach(item => addPlaylist(item));
+        updatePlaylistHighlight();
     // document.getElementById('playlists').value=currentPlaylistPlaying;      
     }
 
@@ -404,17 +416,14 @@ function handleCurrentlyPlayingResponse() {
             // select playlist
             currentPlaylistPlaying = data.context.uri;
             currentPlaylistPlaying = data.context.uri.substring(currentPlaylistPlaying.lastIndexOf(":") + 1,  currentPlaylistPlaying.length );
-            console.log(currentPlaylistPlaying);
+            // console.log(currentPlaylistPlaying);
             // console.log(data);
             // Display the playlist name
             // document.getElementById('playlists').value=currentPlaylistPlaying;
         }
 
         // Updates Playlist Highlight
-        console.log(document.getElementById(currentPlaylistPlaying));
-        if (document.getElementById(currentPlaylistPlaying) != null) {
-            document.getElementById(currentPlaylistPlaying).className += " currentlyPlaying";
-        }
+        updatePlaylistHighlight();
     }
 
     // Bad or expired token

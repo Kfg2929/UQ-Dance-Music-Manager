@@ -19,6 +19,14 @@
         <div id="bodyLeftColumn">
             
             <div class="mb-3">
+                <label for="devices" class="form-label">Devices</label>
+                <select id="devices" class="form-control">
+                </select>
+                <input class="btn btn-primary btn-sm mt-3" type="button" onclick="refreshDevices()" value="Refresh Devices">
+                <input type="button" class="btn btn-dark btn-sm  mt-3" onclick="transfer()" value="Transfer">
+            </div>
+
+            <div class="mb-3">
                 <label for="playlists" class="form-label">Playlists</label>
                 <ul id="playlists">
                 </ul>
@@ -49,13 +57,7 @@
             <div id="deviceSection" class="row">
                 <div class="col">
     
-                    <div class="mb-3">
-                        <label for="devices" class="form-label">Devices</label>
-                        <select id="devices" class="form-control">
-                        </select>
-                        <input class="btn btn-primary btn-sm mt-3" type="button" onclick="refreshDevices()" value="Refresh Devices">
-                        <input type="button" class="btn btn-dark btn-sm  mt-3" onclick="transfer()" value="Transfer">
-                    </div>
+                    
     
                     <div class="mb-3">
                         <label for="tracks" class="form-label">Tracks</label>

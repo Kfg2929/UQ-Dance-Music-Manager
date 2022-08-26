@@ -46,7 +46,7 @@ select{
 
 
 
-
+/* Classes */
 .btn {
     cursor: default !important;
 }
@@ -140,7 +140,7 @@ select{
 
 
 
-
+/* ID's */
 #playlists{
     list-style: none;
     padding-left: 0px;
