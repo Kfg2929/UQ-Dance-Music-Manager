@@ -20,9 +20,9 @@
             
             <div class="mb-3">
                 <label for="devices" class="form-label">Devices</label>
-                <select id="devices" class="form-control">
+                <select id="devices" class="form-control" onchange="deviceSelected()">
                 </select>
-                <input class="btn btn-primary btn-sm mt-3" type="button" onclick="refreshDevices()" value="Refresh Devices">
+                <input class="btn btn-primary btn-sm btn-dark mt-3" type="button" onclick="refreshDevices()" value="Refresh Devices">
                 <input type="button" class="btn btn-dark btn-sm  mt-3" onclick="transfer()" value="Transfer">
             </div>
 
@@ -32,7 +32,7 @@
                 </ul>
                 <!-- <select id="playlist" class="form-control" onchange="playlistSelected()">
                 </select> -->
-                <input class="btn btn-primary btn-sm mt-3" type="button" onclick="refreshPlaylists()" value="Refresh Playlists">
+                <input class="btn btn-primary btn-sm btn-dark mt-3" type="button" onclick="refreshPlaylists()" value="Refresh Playlists">
 
             </div>
 
@@ -60,22 +60,13 @@
                     
     
                     <div class="mb-3">
-                        <label for="tracks" class="form-label">Tracks</label>
+                        <label for="tracks" class="form-label" onclick="recentlyPlayed()">Tracks</label>
                         <select id="tracks" class="form-control">
                         </select>
-                        <input class="btn btn-primary btn-sm mt-3" type="button" onclick="fetchTracks()" value="Fetch Tracks">
+                        <input class="btn btn-primary btn-sm btn-dark mt-3" type="button" onclick="fetchTracks()" value="Fetch Tracks">
                     </div>
     
-                    <div class="row  mt-3">
-                        <div class="col">
-                            <input type="button" class="btn btn-dark" onclick="previous()" value="Prev">
-                            <input type="button" class="btn btn-dark" onclick="play()" value="Play">
-                            <input type="button" class="btn btn-dark" onclick="shuffle()" value="Shuffle">
-                            <input type="button" class="btn btn-dark" onclick="pause()" value="Pause">
-                            <input type="button" class="btn btn-dark" onclick="next()" value="Next">
-                            <input type="button" class="btn btn-dark" onclick="currentlyPlaying()" value="Refresh Currently Playing">
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
         </div>
@@ -90,6 +81,16 @@
                     <img id="albumImage" src="">
                     <div id="trackTitle"></div>
                     <div id="trackArtist"></div>
+                    <div class="row  mt-3">
+                        <div class="col">
+                            <input type="button" class="btn btn-dark" onclick="previous()" value="Prev">
+                            <input type="button" class="btn btn-dark" onclick="togglePauseResume()" value="Play">
+                            <input type="button" class="btn btn-dark" onclick="resumePlayback()" value="Resume">
+                            <input type="button" class="btn btn-dark" onclick="next()" value="Next">
+                            <input type="button" class="btn btn-dark" onclick="shuffle()" value="Shuffle">
+                            <input type="button" class="btn btn-dark" onclick="currentlyPlaying()" value="Refresh Currently Playing">
+                        </div>
+                    </div>
                 </div>    
             </div>
         </div>

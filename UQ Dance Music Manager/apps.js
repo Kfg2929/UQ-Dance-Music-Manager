@@ -9,11 +9,14 @@ var access_token = null;
 var refresh_token = null;
 var playlistURLAddition = "?limit=5";
 var playerURLAddition = "?market=US";
-var currentPlaylistPlaying = "";
-var currentPlaylistSelected = "";
-var currentDevicePlaying = [];
-var currentAlbum = "";
 var radioButtons = [];
+// Device, Playlist, Track, Album
+var currentPlayingIDs = ["", "", "", ""];
+var currentSelectedIDs = ["", "", "", ""];
+var currentPlayingOBJs = [null, null, null, null];
+var currentSelectedOBJs = [null, null, null, null];
+
+var playbackActive = false;
 
 const AUTHORIZE = "https://accounts.spotify.com/authorize"
 const TOKEN = "https://accounts.spotify.com/api/token";
@@ -25,8 +28,9 @@ const NEXT = "https://api.spotify.com/v1/me/player/next";
 const PREVIOUS = "https://api.spotify.com/v1/me/player/previous";
 const PLAYER = "https://api.spotify.com/v1/me/player";
 const TRACKS = "https://api.spotify.com/v1/playlists/{{PlaylistId}}/tracks";
-const CURRENTLYPLAYING = "https://api.spotify.com/v1/me/player/currently-playing";
 const SHUFFLE = "https://api.spotify.com/v1/me/player/shuffle";
+const CURRENTLYPLAYING = "https://api.spotify.com/v1/me/player/currently-playing";
+const RECENTLYPLAYED = "https://api.spotify.com/v1/me/player/recently-played";
 
 
 
@@ -147,6 +151,10 @@ function handleAuthorizationResponse(){
 
 // Utility Functions
 function addDevice(item){
+    if (item.is_active) {
+        currentPlayingOBJs[0] = item;
+        currentPlayingIDs[0] = item.id;
+    }
     let node = document.createElement("option");
     node.value = item.id;
     node.innerHTML = item.name;
@@ -177,24 +185,27 @@ function addTrack(item, index){
 }
 
 function deviceId(){
-    return document.getElementById("devices").value;
+    return currentPlayingIDs[0];
 }
 
 function playlistSelected(id) {
-    currentPlaylistSelected = id.target.id;
+    currentSelectedIDs[1] = id.target.id;
     updatePlaylistHighlight()
     refreshPlaylists();
     fetchTracks();
 }
 
-function updatePlaylistHighlight(){
-    if (document.getElementById(currentPlaylistSelected) != null) {
-        document.getElementById(currentPlaylistSelected).className += " currentlyPlaying";
-    } else if(document.getElementById(currentPlaylistPlaying) != null) {
-        document.getElementById(currentPlaylistPlaying).className += " currentlyPlaying";
-    }
+function deviceSelected(id) {
+    currentSelectedIDs[0] = id.target.id;
 }
 
+function updatePlaylistHighlight(){
+    if (document.getElementById(currentSelectedIDs[1]) != null) {
+        document.getElementById(currentSelectedIDs[1]).className += " currentlyPlaying";
+    } else if(document.getElementById(currentPlayingIDs[1]) != null) {
+        document.getElementById(currentPlayingIDs[1]).className += " currentlyPlaying";
+    }
+}
 
 
 
@@ -208,12 +219,12 @@ function refreshPlaylists(){
 }
 
 function fetchTracks(){
-    let playlist_id = currentPlaylistSelected;
+    let playlist_id = currentSelectedIDs[1];
     if ( playlist_id.length > 0 ){
         url = TRACKS.replace("{{PlaylistId}}", playlist_id);
         callApi( "GET", url, null, handleTracksResponse);
     }
-    playlist_id = currentPlaylistPlaying;
+    playlist_id = currentPlayingIDs[1];
     if ( playlist_id.length > 0 ){
         url = TRACKS.replace("{{PlaylistId}}", playlist_id);
         callApi( "GET", url, null, handleTracksResponse);
@@ -233,36 +244,49 @@ function callApi(method, url, body, callback){
     xhr.send(body);
 }
 
+// Potential model for getting more than the limit (must work together with a new handler function)
+function recentlyPlayed(URL = RECENTLYPLAYED){
+    callApi( "GET", URL + "?limit=50", null, handleRecentlyPlayedResponse);
+}
+
 
 
 
 // Playback Manipulation
-function play(){
-    console.log(document.getElementById("playlists").value);
-    let playlist_id = document.getElementById("playlists").value;
-    let trackindex = document.getElementById("tracks").value;
-    // let album = document.getElementById("album").name;
-    let album = currentAlbum;
-    let body = {};
-    if (album.length > 0){
-        body.context_uri = album;
+function togglePauseResume(){
+    // Updates currentTrackPlaying
+    // Uses async/await to ensure correct order of operation
+    currentlyPlaying()
+    // If a track exists
+    if (currentPlayingIDs[2] != null) {
+        console.log(playbackActive)
+        // If a track is currently playing
+        if (playbackActive) {
+            console.log("Was playing, now paused")
+            pausePlayback();
+        }
+        // Track exists but is paused
+        else {
+            console.log("Was paused, now playing")
+            // Plays on whatever device is currently playing
+            resumePlayback(currentPlayingIDs[0]);
+        }
     }
-    else{
-        body.context_uri = "spotify:playlist:" + playlist_id;
-    }
-    body.offset = {};
-    body.offset.position = trackindex.length > 0 ? Number(trackindex) : 0;
-    body.offset.position_ms = 0;
-    callApi("PUT", PLAY + "?device_id=" + deviceId(), JSON.stringify(body), handleApiResponse);
+
 }
 
 function shuffle(){
     callApi("PUT", SHUFFLE + "?state=true&device_id=" + deviceId(), null, handleApiResponse);
-    play(); 
+    togglePauseResume(); 
 }
 
-function pause(){
+function pausePlayback(){
     callApi("PUT", PAUSE + "?device_id=" + deviceId(), null, handleApiResponse);
+}
+
+function resumePlayback(targetDeviceID = null){
+    transfer(targetDeviceID);
+    callApi("PUT", PLAY + "?device_id=" + deviceId(), null, handleApiResponse);
 }
 
 function next(){
@@ -273,10 +297,23 @@ function previous(){
     callApi("POST", PREVIOUS + "?device_id=" + deviceId(), null, handleApiResponse);
 }
 
-function transfer(){
+function transfer(targetDeviceID = null){
     let body = {};
+    // Called without target
+    if (targetDeviceID == null) {
+        // Device selected
+        if (currentSelectedIDs[0] != "") {
+            // Target selected device
+            targetDeviceID = currentSelectedIDs[0]
+        }
+        // No device selected
+        else {
+            // Target currently playing device
+            targetDeviceID = currentPlayingIDs[0]
+        }
+    }
     body.device_ids = [];
-    body.device_ids.push(deviceId())
+    body.device_ids.push(deviceId)
     callApi("PUT", PLAYER, JSON.stringify(body), handleApiResponse);
 }
 
@@ -306,7 +343,7 @@ function handleDeviceResponse() {
         var data = JSON.parse(this.responseText);
         console.log("Devices handled");
         removeAllItems( "devices" );
-        data.devices.forEach(item => addDevice(item));        
+        data.devices.forEach(item => addDevice(item));  
     }
 
     // Bad or expired token
@@ -405,8 +442,12 @@ function handleCurrentlyPlayingResponse() {
         
         
         if ( data.item != null ){
-            currentAlbum = data.item.album;
-            document.getElementById("albumImage").src = currentAlbum.images[0].url;
+            currentPlayingIDs[3] = data.item.album.id;
+            currentPlayingOBJs[3] = data.item.album;
+            currentPlayingIDs[2] = data.item.id;
+            currentPlayingOBJs[2] = data.item;
+            playbackActive = data.is_playing;
+            document.getElementById("albumImage").src = currentPlayingOBJs[3].images[0].url;
             document.getElementById("trackTitle").innerHTML = data.item.name;
             document.getElementById("trackArtist").innerHTML = data.item.artists[0].name;
         }
@@ -420,12 +461,8 @@ function handleCurrentlyPlayingResponse() {
         // If the track has playlist data
         if ( data.context != null ){
             // select playlist
-            currentPlaylistPlaying = data.context.uri;
-            currentPlaylistPlaying = data.context.uri.substring(currentPlaylistPlaying.lastIndexOf(":") + 1,  currentPlaylistPlaying.length );
-            // console.log(currentPlaylistPlaying);
-            // console.log(data);
-            // Display the playlist name
-            // document.getElementById('playlists').value=currentPlaylistPlaying;
+            currentPlayingIDs[1] = data.context.uri.substring(data.context.uri.lastIndexOf(":") + 1,  data.context.uri.length );
+            currentPlayingOBJs[1] = data.context;
         }
 
         // Updates Playlist Highlight
@@ -453,17 +490,55 @@ function handleCurrentlyPlayingResponse() {
     }
 }
 
+// Currently overides tracks. To be changed
+function handleRecentlyPlayedResponse() {
+    // Good site response "200 OK"
+    if ( this.status == 200 ){
+        var data = JSON.parse(this.responseText);
+        console.log("Recently Played handled");
+        removeAllItems( "tracks" );
+        data.items.forEach((item, index) => addTrack(item, index));
+    }
+
+    // Bad or expired token
+    else if ( this.status == 401 ){
+        refreshAccessToken()
+    }
+    
+    // Unexpected site response
+    else {
+        console.log(this.responseText);
+        console.log(PLAYER + playerURLAddition);
+        // alert(this.responseText);
+    }
+}
+
 
 
 // Debug Functions
 function verboseData(){
-    console.log("currentPlaylistPlaying: " + currentPlaylistPlaying);
-    console.log("currentPlaylistSelected: " + currentPlaylistSelected);
+    console.log(" ----- ----- ----- ");
+    console.log("currentDevicePlaying: " + currentPlayingIDs[0]);
+    console.log("currentPlaylistPlaying: " + currentPlayingIDs[1]);
+    console.log("currentTrackPlaying: " + currentPlayingIDs[2]);
+    console.log("currentAlbumPlaying: " + currentPlayingIDs[3]);
+    // console.log("currentPlayingOBJs: " + currentPlayingOBJs);
+    // currentPlayingOBJs.forEach(item =>{console.log(item)})
+    console.log(" ----- ");
+    console.log("currentDeviceSelected: " + currentSelectedIDs[0]);
+    console.log("currentPlaylistSelected: " + currentSelectedIDs[1]);
+    console.log("currentTrackSelected: " + currentSelectedIDs[2]);
+    console.log("currentAlbumSelected: " + currentSelectedIDs[3]);
+    console.log(" ----- ----- ----- ");
+
 }
 
 
-// All playback Manipulation buttons need debugging for propper functionality
+// All playback Manipulation buttons need debugging for proper functionality
 //Debug album storage and display
 // Debug refresh current tracks when currentPlaylistPlaying is empty
     // Impacted by 336 - handleResponses - refresh currently playing - track has playlist date
 // TODO Auto song refresh at appropriate times (and on song change)
+// TODO currentPlayingOBJs[1] should be a get playlist response, not a context object (for example, does not have id attribute)
+// TODO handle case where no devices are available
+// TODO Use async/await to debug togglePauseResume (to ensure currentlyPlaying is updated before continuing)
