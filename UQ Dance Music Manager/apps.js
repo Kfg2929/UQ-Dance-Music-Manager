@@ -196,7 +196,8 @@ function playlistSelected(id) {
 }
 
 function deviceSelected(id) {
-    currentSelectedIDs[0] = id.target.id;
+    // currentSelectedIDs[0] = id.target.id;
+    currentSelectedIDs[0] = document.getElementById("devices").value;
 }
 
 function updatePlaylistHighlight(){
@@ -542,3 +543,4 @@ function verboseData(){
 // TODO currentPlayingOBJs[1] should be a get playlist response, not a context object (for example, does not have id attribute)
 // TODO handle case where no devices are available
 // TODO Use async/await to debug togglePauseResume (to ensure currentlyPlaying is updated before continuing)
+// TODO Debug device onchange function (not parsing 'id')
